@@ -25,7 +25,3 @@ MyConsole.WriteLine("`n`n`n`n`n`n`n`n`n`n`n`nPress any Key to Exit..")
 MyConsole.getch()
 ExitApp
 esc::ExitApp
-
-qweqwe()
-{
-}
