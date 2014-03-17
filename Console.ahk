@@ -23,8 +23,8 @@ SetCursorPosition(X, Y) - X and Y are in Column and row
 GetCursorPosition()- returns object with X and Y as members
 CreateProgress(X, Y, W, H, SmoothMode=0, Front="", Back="") - returns ProgressObjects
 SetProgress(ByRef ProgressObject, Value)
-FillConsoleOutputCharacter(Character, StartCoordinates, Length)
-FillConsoleOutputAttribute(Attribute, StartCoordinates, Length)
+FillConsoleOutputCharacter(Character, StartCoordinates, Length) - StartCoordinate is an Object (refer to examples)
+FillConsoleOutputAttribute(Attribute, StartCoordinates, Length) - StartCoordinate is an Object (refer to examples)
 */
 
 class Console
