@@ -62,7 +62,9 @@ class Console
 		hStdin := DllCall("GetStdHandle", "int", -10)
 		VarSetCapacity(Buffer, this.VarCapacity)
 		DllCall("ReadConsole", "int", hStdIn, "int", &Buffer, "int", this.VarCapacity, "int", 0)
-		return StrGet(&Buffer)
+		RegExMatch(StrGet(&Buffer), ".*", Dummy)
+		DllCall("FlushConsoleInputBuffer", "int", hStdIn)
+		return, Dummy
 	}
 	
 	getch()
