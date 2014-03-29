@@ -2,7 +2,7 @@
 Tested On		Autohotkey_L version  1.1.13.00
 Author 			Nick McCoy (Ronins)
 Date			March 17, 2014
-Version			1.0.0.0
+Version			1.0.0.1
 
 ---------------------------------------------------------------------
 Functions
@@ -30,8 +30,8 @@ FillConsoleOutputAttribute(Attribute, StartCoordinates, Length) - StartCoordinat
 class Console
 {	
 	Color := Object("Black", 0x0, "DarkBlue", 0x1, "DarkGreen", 0x2, "Turquoise", 0x3, "DarkRed", 0x4, "Purple", 0x5, "Brown", 0x6, "Gray", 0x7, "DarkGray", 0x8, "Blue", 0x9, "Green", 0xA, "Cyan", 0xB, "Red", 0xC, "Magenta", 0xD, "Yellow", 0xE, "White", 0xF)
-	VarCapacity := 1024*1024 ;1 mb capacity
-	Version := "1.0.0.0"
+	VarCapacity := 1024*8 ;8kb capacity
+	Version := "1.0.0.1"
 	
 	__New(TargetPID = -1)
 	{
