@@ -57,14 +57,35 @@ class Console
 		return, DllCall("WriteConsole", "int", hStdout, "uint", &Line, "uint", StrLen(Line), "uint", 0)
 	}
 
-	ReadLine()
+	ReadLine(ByRef str="")
 	{
+		/*
 		hStdin := DllCall("GetStdHandle", "int", -10)
 		VarSetCapacity(Buffer, this.VarCapacity)
 		DllCall("ReadConsole", "int", hStdIn, "int", &Buffer, "int", this.VarCapacity, "int", 0)
 		RegExMatch(StrGet(&Buffer), ".*", Dummy)
 		DllCall("FlushConsoleInputBuffer", "int", hStdIn)
 		return, Dummy
+		*/
+		BufferSize:=8192 ;65536 bytes is the maximum
+		charsRead:=0
+		Ptr := (A_PtrSize) ? "uptr" : "uint"
+		
+		VarSetCapacity(str,BufferSize)
+		e:=DllCall("ReadConsole" . ((A_IsUnicode) ? "W" : "A")
+				,Ptr,DllCall("GetStdHandle", "int", -10)
+				,Ptr,&str
+				,"UInt",BufferSize
+				,Ptr "*",charsRead
+				,Ptr,0
+				,UInt)		
+		if ( (!e) or (!charsRead) or (ErrorLevel) )
+			return ""
+		
+		Loop, % charsRead
+			msg .= Chr(NumGet(str, (A_Index-1) * ((A_IsUnicode) ? 2 : 1), (A_IsUnicode) ? "ushort" : "uchar"))
+		StringSplit, msg, msg,`r`n
+		return (str:=msg1)
 	}
 	
 	getch()
