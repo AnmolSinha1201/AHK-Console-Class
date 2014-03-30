@@ -1,8 +1,9 @@
 /*
-Tested On		Autohotkey_L version  1.1.13.00
+Tested On		Autohotkey_L version  1.1.13.00 ANSI
 Author 			Nick McCoy (Ronins)
-Date			March 17, 2014
-Version			1.0.0.1
+Initial Date			March 17, 2014
+Version Release Date	March 31, 2014
+Version			1.1
 
 ---------------------------------------------------------------------
 Functions
@@ -23,15 +24,30 @@ SetCursorPosition(X, Y) - X and Y are in Column and row
 GetCursorPosition()- returns object with X and Y as members
 CreateProgress(X, Y, W, H, SmoothMode=0, Front="", Back="") - returns ProgressObjects
 SetProgress(ByRef ProgressObject, Value)
-FillConsoleOutputCharacter(Character, StartCoordinates, Length) - StartCoordinate is an Object (refer to examples)
-FillConsoleOutputAttribute(Attribute, StartCoordinates, Length) - StartCoordinate is an Object (refer to examples)
+FillConsoleOutputCharacter(Character, StartCoordinates, Length)
+FillConsoleOutputAttribute(Attribute, StartCoordinates, Length)
+CreateConsoleScreenBuffer()
+SetConsoleActiveScreenBuffer(hStdOut)
+SetStdHandle(nStdHandle, Handle) - nStdHandle = -10 (input), -11 (output)
+GetStdHandle(nStdHandle=-11)
+GetConsolePID()
+EmbedConsole(GuiHWnd, X=10, Y=10)
+
+
+-------------------------------------------------------------------------------
+References
+-------------------------------------------------------------------------------
+http://rdoc.info/github/luislavena/win32console/Win32/Console/Constants
+http://msdn.microsoft.com/en-us/library/windows/desktop/ms682073(v=vs.85).aspx
+http://msdn.microsoft.com/library/078sfkak
+http://www.autohotkey.com/board/topic/42308-embedding-a-console-window-in-a-gui/
 */
 
 class Console
 {	
 	Color := Object("Black", 0x0, "DarkBlue", 0x1, "DarkGreen", 0x2, "Turquoise", 0x3, "DarkRed", 0x4, "Purple", 0x5, "Brown", 0x6, "Gray", 0x7, "DarkGray", 0x8, "Blue", 0x9, "Green", 0xA, "Cyan", 0xB, "Red", 0xC, "Magenta", 0xD, "Yellow", 0xE, "White", 0xF)
-	VarCapacity := 1024*8 ;8kb capacity
-	Version := "1.0.0.1"
+	VarCapacity := 1024*8 ;1 mb capacity
+	Version := "1.1"
 	
 	__New(TargetPID = -1)
 	{
@@ -57,35 +73,14 @@ class Console
 		return, DllCall("WriteConsole", "int", hStdout, "uint", &Line, "uint", StrLen(Line), "uint", 0)
 	}
 
-	ReadLine(ByRef str="")
+	ReadLine()
 	{
-		/*
 		hStdin := DllCall("GetStdHandle", "int", -10)
 		VarSetCapacity(Buffer, this.VarCapacity)
 		DllCall("ReadConsole", "int", hStdIn, "int", &Buffer, "int", this.VarCapacity, "int", 0)
 		RegExMatch(StrGet(&Buffer), ".*", Dummy)
 		DllCall("FlushConsoleInputBuffer", "int", hStdIn)
 		return, Dummy
-		*/
-		BufferSize:=8192 ;65536 bytes is the maximum
-		charsRead:=0
-		Ptr := (A_PtrSize) ? "uptr" : "uint"
-		
-		VarSetCapacity(str,BufferSize)
-		e:=DllCall("ReadConsole" . ((A_IsUnicode) ? "W" : "A")
-				,Ptr,DllCall("GetStdHandle", "int", -10)
-				,Ptr,&str
-				,"UInt",BufferSize
-				,Ptr "*",charsRead
-				,Ptr,0
-				,UInt)		
-		if ( (!e) or (!charsRead) or (ErrorLevel) )
-			return ""
-		
-		Loop, % charsRead
-			msg .= Chr(NumGet(str, (A_Index-1) * ((A_IsUnicode) ? 2 : 1), (A_IsUnicode) ? "ushort" : "uchar"))
-		StringSplit, msg, msg,`r`n
-		return (str:=msg1)
 	}
 	
 	getch()
@@ -99,7 +94,7 @@ class Console
 		Event.EventList[0x0001] := "4|8|10|12|14|16"
 		Event.EventList[0x0002] := "4|6|8|12|16"
 		
-		VarSetCapacity(InputRecord, 2000)
+		VarSetCapacity(InputRecord, 20)
 		VarSetCapacity(s, 4)
 		hStdIn := DllCall("GetStdHandle", "int", -10)
 		DllCall("ReadConsoleInput", "int", hStdIn, "int", &InputRecord, "int", 100, "int", &s)
@@ -255,5 +250,47 @@ class Console
 		VarSetCapacity(s, 4)
 		hStdout := DllCall("GetStdHandle", "int", -11)
 		return, DllCall("FillConsoleOutputAttribute", "int", hStdOut, "int", Attribute, "int", Length, "int", NumGet(Coord, "uint"), "int", &s)
+	}
+	
+	CreateConsoleScreenBuffer()
+	{
+		return, DllCall("CreateConsoleScreenBuffer", "int", 0x80000000|0x40000000, "int", 0x00000001|0x00000002, "int", 0, "int", 0x00000001, "int", 0)
+	}
+	
+	SetConsoleActiveScreenBuffer(hStdOut)
+	{
+		return, DllCall("SetConsoleActiveScreenBuffer", "int", hStdOut)
+	}
+	
+	SetStdHandle(nStdHandle, Handle)
+	{
+		return, DllCall("SetStdHandle", "int", nStdHandle, "int", Handle)
+	}
+	
+	GetStdHandle(nStdHandle=-11)
+	{
+		return, DllCall("GetStdHandle", "int", nStdHandle)
+	}
+	
+	GetConsolePID()
+	{
+		ConsoleHWnd := DllCall("GetConsoleWindow")
+		WinGet, ConsolePID, PID, ahk_id %ConsoleHWnd%
+		return, ConsolePID
+	}
+	
+	EmbedConsole(GuiHWnd, X=10, Y=10)
+	{
+		ConsoleHWnd := DllCall("GetConsoleWindow")
+		VarSetCapacity(ConsoleRect, 16)
+		DllCall("GetClientRect", "uint", ConsoleHWnd, "uint", &ConsoleRect)
+		CWidth := NumGet(ConsoleRect, 8)
+		CHeight:= NumGet(ConsoleRect, 12)
+		WinSet, Style, -0x80C40000, ahk_id %ConsoleHWnd% ;WS_PopUp, WS_Caption, WS_ThickFrame
+		WinSet, Style, +0x40000000, ahk_id %ConsoleHWnd% ;WS_Child
+		WinSet, ExStyle, -0x200, ahk_id %ConsoleHWnd% ;WS_Ex_ClientEdge
+		WinSet, Style, +0x2000000, % "ahk_id " GuiHWnd ;WS_ClipChildren
+		DllCall("SetParent", "int", ConsoleHWnd, "int", GuiHWnd)
+		DllCall("SetWindowPos", "int", ConsoleHWnd, "int", 0, "int", X, "int", Y, "int", CWidth, "int", CHeight, "int", 0x400)
 	}
 }
